@@ -11,7 +11,7 @@ def get_grid():
     for i in range(1, 5):
         for j in range(1, 5):
             if len(driver.find_elements_by_css_selector(f".tile.tile-position-{j}-{i}")) > 0:
-                grid.append(int(driver.find_elements_by_css_selector(f".tile.tile-position-{j}-{i}")[0].text))
+                grid.append(int(driver.find_elements_by_css_selector(f".tile.tile-position-{j}-{i}")[-1].text))
             else:
                 grid.append(0)
     return grid
