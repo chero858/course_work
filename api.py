@@ -36,7 +36,7 @@ def game(driver):
 
 
 if __name__ == '__main__':
-    driver = webdriver.Chrome(executable_path=r'C:/Users/Администратор/Desktop/chromedriver.exe')
+    driver = webdriver.Chrome(executable_path=r'C:/Users/roman/PycharmProjects/course_work/chromedriver.exe')
     driver.get('https://play2048.co/')
     game(driver)
     driver.close()
