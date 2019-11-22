@@ -34,7 +34,7 @@ public:
 //        for(int i = 0; i < 4; i++)
 //            grid[i].resize(4);
         grid = {
-                {2,2,2,2},
+                {2,0,0,0},
                 {2,0,0,0},
                 {2,0,0,0},
                 {2,0,0,0}
@@ -75,6 +75,7 @@ public:
                     }
                 }
             }
+            // start_line++;
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 4; j++)
                     cout << board[i][j] << "  ";
