@@ -7,7 +7,7 @@ def degree(num):
 
 
 if __name__ == '__main__':
-    grid = [64, 0, 0, 0, 4, 2, 16, 16, 2, 2, 4, 4, 64, 2, 2, 2]
+    grid = [2, 2, 8, 4, 8, 128, 16, 8, 2, 2, 8, 2, 2, 32, 2, 4]
     degrees = [degree(x) for x in grid]
     grid_num = shift = 0
     for i, bin_num in enumerate(degrees[::-1]):
