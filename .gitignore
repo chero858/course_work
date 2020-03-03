@@ -1,2 +1,8 @@
 ﻿.idea
 venv
+*.log
+*.pyd
+*.obj
+example.exe
+example.exp
+example.lib
