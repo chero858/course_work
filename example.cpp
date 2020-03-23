@@ -1,11 +1,10 @@
 #include <pybind11/pybind11.h>
 #include <random>
 #include <iostream>
-#include <string>
 #include <cfloat>
-#include <utility>
 #include <vector>
 #include <chrono>
+#include <algorithm>
 
 namespace py = pybind11;
 
@@ -15,166 +14,28 @@ using std::endl;
 using std::vector;
 using std::string;
 
+//int random_int(int max) {
+//    return std::rand() % (max + 1);
+//}
+//
+//bool random_bool() {
+//    return random_int(9) != 9;
+//}
+
+std::random_device rd;
+std::mt19937 rand_engine(rd());
+
 bool random_bool() {
-    std::random_device rd;
-    std::mt19937 rand_engine(rd());
     std::bernoulli_distribution random_bool_generator(0.9);
     return random_bool_generator(rand_engine);
 }
 
 int random_int(int max) {
-    std::random_device rd;
-    std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(0, std::nextafter(max + 1, DBL_MAX));
-    return dist(mt);
+    return dist(rand_engine);
 }
 
-class Game_2048{
-private:
-    vector<vector<int>> grid;
-    int dir;
-public:
-    Game_2048() {
-        grid.resize(4);
-        for(int i = 0; i < 4; i++)
-            grid[i].resize(4);
-        dir = 0;
-    }
-
-    void set_grid(vector<vector<int>> board) {
-        this->grid = std::move(board);
-    }
-
-
-    vector<vector<int>> make_move(const int& direction) {
-        vector<vector<int>> board = grid;
-        int dir_line = -1, dir_col = 0;
-        int start_line = 0, start_column = 0, line_step = 1, column_step = 1;
-        if(direction == 2) {
-            start_line = 3;
-            line_step = -1;
-            dir_line = 1;
-            dir_col = 0;
-        }
-        if(direction == 3) {
-            start_column = 3;
-            column_step = -1;
-            dir_line = 0;
-            dir_col = 1;
-        }
-        if(direction == 1) {
-            dir_line = 0;
-            dir_col = -1;
-        }
-        bool move_possible = true;
-        do {
-            move_possible = false;
-            for(int i = start_line; i >= 0 && i < 4; i += line_step) {
-                for (int j = start_column; j >= 0 && j < 4; j += column_step) {
-                    int next_i = i + dir_line, next_j = j + dir_col;
-                    if (board[i][j] && can_do_move(i, j, next_i, next_j)
-                        && !board[next_i][next_j]) {
-                        board[next_i][next_j] += board[i][j];
-                        board[i][j] = 0;
-                        move_possible = true;
-                    }
-                }
-            }
-        } while(move_possible);
-        vector<vector<int>> board_copy;
-        for(int k = 0; k < 2; k++) {
-            if(k != 1)
-                board_copy = board;
-            for(int i = start_line; i >= 0 && i < 4; i += line_step) {
-                for (int j = start_column; j >= 0 && j < 4; j += column_step) {
-                    int next_i = i + dir_line, next_j = j + dir_col;
-                    if (board[i][j] && can_do_move(i, j, next_i, next_j)
-                        && (board[next_i][next_j] == board[i][j] || !board[next_i][next_j])
-                        && (board_copy[i][j] == board[i][j])) {
-                        board[next_i][next_j] += board[i][j];
-                        board[i][j] = 0;
-                    }
-                }
-            }
-//            for (int i = 0; i < 4; i++) {
-//                for (int j = 0; j < 4; j++)
-//                    cout << board[i][j] << "  ";
-//                cout << endl;
-//            }
-//            cout << endl;
-//            string foo;
-//            cin >> foo;
-        }
-
-        return board;
-    }
-
-    int Dir() {
-        return this->dir;
-    }
-
-    static bool can_do_move(int line, int column, int next_line, int next_column ) {
-        return (next_line >= 0 && next_column >= 0 && next_line < 4 && next_column < 4);
-    }
-
-    void add_tile() {
-        bool tile = random_bool();
-        int position = available_cells()[random_int(available_cells().size() - 1)];
-        if(tile) grid[position / 4][position % 4] = 2;
-        else grid[position / 4][position % 4] = 4;
-    }
-
-    vector<int> available_cells() {
-        vector<int> available_cells;
-        for(int i = 0; i < 4; i++)
-            for(int j = 0; j < 4; j++)
-                if(grid[i][j] == 0)
-                    available_cells.push_back(i * 4 + j);
-        return available_cells;
-    }
-
-    void play() {
-        int input = 0;
-        bool flag = true;
-        vector<vector<int>> grid_copy;
-        while(input != 6 ){
-//            system("cls");
-            if (grid != grid_copy && available_cells().size())
-                add_tile();
-//            show();
-            grid_copy = grid;
-            input = random_int(3);
-            if(flag) {
-                flag = false;
-                dir = input;
-            }
-            grid = make_move(input);
-            if(available_cells().empty()){
-                if(make_move(0) == grid && make_move(1) == grid)
-                    break;
-            }
-        }
-    }
-
-    int score() {
-        int sum = 0;
-        for (int i = 0; i < 4; i++)
-            for (int j = 0; j < 4; j++)
-                sum += grid[i][j];
-        return sum;
-    }
-
-    void show() {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++)
-                cout << grid[i][j] << "  ";
-            cout << endl;
-        }
-        cout << score() << endl;
-    }
-};
-
-int find_best_move(long long int num) {
+void print_grid(uint64_t num){
     vector<vector<int>> grid(4);
     long long int hex = 0xf;
     int shift = 0;
@@ -186,34 +47,234 @@ int find_best_move(long long int num) {
             hex *= 0xf + 1;
             shift += 4;
         }
-    Game_2048 game;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++)
+            cout << grid[i][j] << "  ";
+        cout << endl;
+    }
+    cout << endl;
+}
+
+bool check(uint16_t row, int index){
+    return  ((row & (0xFULL << 4 * index)) == ((row & (0xFULL << 4 * (index + 1))) >> 4) && (row & (0xFULL << 4 * index)) != 0);
+}
+
+uint16_t sum_elements(uint16_t row){
+    for(int i = 0; i < 3; i++) {
+        if(check(row, i)) {
+            if (i == 0)  {
+                row++;
+                row = ((row & 0xFF00ULL) >> 4) | (row & 0xFULL);
+                continue;
+            }
+            if (i == 1) {
+                row += 16;
+                row = ((row & 0xF000ULL) >> 4) | (row & 0xFFULL);
+            }
+            else {
+                row += 256;
+                row &= 0x0FFFULL;
+            }
+        }
+    }
+    return row;
+}
+
+bool no_cells_available(uint64_t grid){
+    for(int i = 0;  i < 16; i++){
+        if ((grid & (0xFULL << (4 * i))) == 0)
+            return false;
+    }
+    return true;
+}
+
+uint64_t insert_tile(uint64_t grid) {
+    bool flag = true;
+    if (no_cells_available(grid))
+        return grid;
+    while(flag){
+        uint64_t position = random_int(15);
+        if((grid & (0xFULL << (4 * position))) == 0){
+            flag = false;
+            uint64_t tile = 1;
+            if(random_bool())
+                tile <<= position * 4;
+            else
+                tile <<= position * 4 + 1;
+            grid |= tile;
+        }
+    }
+    return grid;
+}
+
+
+
+int score(uint64_t grid){
+    int sum = 0;
+    for(int i = 0;  i < 16; i++){
+        sum += ((grid & (0xFULL << (4 * i))) >> (4 * i));
+    }
+    return sum;
+}
+
+uint64_t rotate_back(uint64_t grid) {
+    uint64_t rotated_grid = (grid & 0xF000000000000ULL) << 12u;
+    rotated_grid |= (grid & 0xF00000000ULL) << 24u;
+    rotated_grid |= (grid & 0xF0000ULL) << 36u;
+    rotated_grid |= (grid & 0xFULL) << 48u;
+
+    rotated_grid |= (grid & 0xF0000000000000ULL) >> 8u;
+    rotated_grid |= (grid & 0xF000000000ULL) << 4u;
+    rotated_grid |= (grid & 0xF00000ULL) << 16u;
+    rotated_grid |= (grid & 0xF0ULL) << 28u;
+
+    rotated_grid |= (grid & 0xF00000000000000ULL) >> 28u;
+    rotated_grid |= (grid & 0xF0000000000ULL) >> 16u;
+    rotated_grid |= (grid & 0xF000000ULL) >> 4u;
+    rotated_grid |= (grid & 0xF00ULL) << 8u;
+
+    rotated_grid |= (grid & 0xF000000000000000ULL) >> 48u;
+    rotated_grid |= (grid & 0xF00000000000ULL) >> 36u;
+    rotated_grid |= (grid & 0xF0000000ULL) >> 24u;
+    rotated_grid |= (grid & 0xF000ULL) >> 12u;
+
+    return rotated_grid;
+}
+
+
+uint64_t rotate(uint64_t grid) {
+    uint64_t rotated_grid = (grid & 0xF000ULL) << 48u;
+    rotated_grid |= (grid & 0xF0000000ULL) << 28u;
+    rotated_grid |= (grid & 0xF00000000000ULL) << 8u;
+    rotated_grid |= (grid & 0xF000000000000000ULL) >> 12u;
+
+    rotated_grid |= (grid & 0xF00ULL) << 36u;
+    rotated_grid |= (grid & 0xF000000ULL) << 16u;
+    rotated_grid |= (grid & 0xF0000000000ULL) >> 4u;
+    rotated_grid |= (grid & 0xF00000000000000ULL) >> 24u;
+
+    rotated_grid |= (grid & 0xF0ULL) << 24u;
+    rotated_grid |= (grid & 0xF00000ULL) << 4u;
+    rotated_grid |= (grid & 0xF000000000ULL) >> 16u;
+    rotated_grid |= (grid & 0xF0000000000000ULL) >> 36u;
+
+    rotated_grid |= (grid & 0xFULL) << 12u;
+    rotated_grid |= (grid & 0xF0000ULL) >> 8u;
+    rotated_grid |= (grid & 0xF00000000ULL) >> 28u;
+    rotated_grid |= (grid & 0xF000000000000ULL) >> 48u;
+
+    return rotated_grid;
+}
+
+uint64_t execute_turn_right(uint64_t grid){
+    uint16_t row_mask = 0xFFFFULL;
+    uint64_t executed_grid = 0;
+    for(int i = 3; i >= 0; i--) {
+        uint16_t row = (grid >> (i * 16)) & row_mask;
+        if(row == 0)
+            continue;
+//    a b c d - start row
+        while ((row & 0xFULL) == 0) // if d == 0
+            row >>= 4; // 0 a b c
+        if ((row & 0xFFF0ULL) != 0) {
+            while ((row & 0xF0ULL) == 0) // if c == 0
+                row = ((row & 0xFF00ULL) >> 4) | (row & 0xFULL); // 0 a b d
+            if ((row & 0xF00ULL) == 0) // if b == 0
+                row = ((row & 0xF000ULL) >> 4) | (row & 0xFFULL); // 0 a c d
+        }
+        row = sum_elements(row);
+        uint64_t new_row = row; // create new var cause "row" only 16 bit
+        executed_grid |= new_row << (16 * i);
+    }
+    return executed_grid;
+}
+
+uint64_t execute_turn_up(uint64_t grid) {
+    return rotate_back(execute_turn_right(rotate(grid)));
+}
+
+uint64_t execute_turn_down(uint64_t grid) {
+    return rotate(execute_turn_right(rotate_back(grid)));
+}
+
+uint64_t execute_turn_left(uint64_t grid) {
+    return rotate(rotate(execute_turn_right(rotate(rotate(grid)))));
+}
+
+uint64_t execute_turn(uint64_t grid, int direction){
+    switch(direction){
+        case 0:
+            return execute_turn_up(grid);
+        case 1:
+            return execute_turn_left(grid);
+        case 2:
+            return execute_turn_down(grid);
+        case 3:
+            return execute_turn_right(grid);
+    }
+}
+
+int get_move(uint64_t grid) {
+    int move = random_int(3);
+    while(execute_turn(grid, move) == grid)
+        move = random_int(3);
+    return move;
+}
+
+bool is_game_over(uint64_t grid) {
+    if(no_cells_available(grid))
+        if (execute_turn(grid, 3) == grid && execute_turn(grid, 2) == grid)
+            return true;
+    return false;
+}
+
+int play(uint64_t &grid) {
+    int move = 0;
+    int dir = 0;
+    bool flag = true;
+    while(!is_game_over(grid)) {
+        move = get_move(grid);
+        if(flag){
+            flag = false;
+            dir = move;
+        }
+        grid = execute_turn(grid, move);
+        grid = insert_tile(grid);
+    }
+    return dir;
+}
+
+int find_best_move(uint64_t grid) {
 //    auto start = std::chrono::high_resolution_clock::now();
 //    auto stop = std::chrono::high_resolution_clock::now();
 //    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 //
 //    cout << "Time taken by function: "
 //         << duration.count() << " microseconds" << endl;
-//    cout << game.score();
+//    std::srand(unsigned(time(nullptr)));
+    uint64_t grid_copy = grid;
     vector<double> score_by_dir(4);
-    for(int i = 0; i < 500; i++) {
-        game.set_grid(grid);
-        game.play();
-        score_by_dir[game.Dir()] += game.score();
+    vector<double> dirs(4);
+    for(int i = 0; i < 10000; i++) {
+        int dir = play(grid);
+        score_by_dir[dir] += score(grid);
+        dirs[dir]++;
+        grid = grid_copy;
     }
-    int max_score = score_by_dir[0];
-    int index = 0;
-    for(int i = 1; i < 4; i++)
-        if(max_score < score_by_dir[i]) {
-            max_score = score_by_dir[i];
-            index = i;
-        }
+//    print_grid(grid_copy);
+    for(int i = 0; i < 4; i++)
+        if(dirs[i] != 0)
+            score_by_dir[i] /= dirs[i];
+//    cout << "****************\n";
+    int index = std::max_element(score_by_dir.begin(), score_by_dir.end()) - score_by_dir.begin();
     return index;
 }
+// best - 4824
 
 
 PYBIND11_MODULE(example, m) {
-    m.doc() = "pybind11 example plugin"; // optional module docstring
+m.doc() = "pybind11 example plugin"; // optional module docstring
 
-    m.def("find_best_move", &find_best_move, "A function which finds best move");
+m.def("find_best_move", &find_best_move, "A function which finds best move");
 
 }

@@ -4,7 +4,6 @@ import time
 import random
 from example import find_best_move
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
 
 
 def degree(num):
@@ -34,17 +33,16 @@ def print_grid(grid):
 
 
 def game(driver):
-    actions = ActionChains(driver)
     keys = {0: Keys.ARROW_UP, 1: Keys.ARROW_LEFT, 2: Keys.ARROW_DOWN, 3: Keys.ARROW_RIGHT}
     while len(driver.find_elements_by_css_selector(f".game-message.game-over")) == 0:
-        print('############')
+        # print('############')
         grid = get_grid(driver)
         num = get_num(grid)
         direction = find_best_move(num)
-        print_grid(grid)
-        print(f"direction: {direction}")
-        actions.send_keys(keys[direction]).perform()
-        time.sleep(1)
+        # print_grid(grid)
+        # print(f"direction: {direction}")
+        driver.find_element_by_css_selector('body').send_keys(keys[direction])
+        time.sleep(0.2)
     print('end')
 
 
@@ -57,16 +55,13 @@ def get_num(grid):
     return grid_num
 
 def playing():
-    driver = webdriver.Chrome(executable_path=r'D:/repos/course_work/chromedriver.exe')
+    driver = webdriver.Chrome(executable_path=r'chromedriver.exe')
     driver.get('https://play2048.co/')
     game(driver)
-    res = int(driver.find_elements_by_css_selector(".score-container")[-1].text)
+    res = driver.find_elements_by_css_selector(".score-container")[-1].text
     driver.close()
     return res
 
 
 if __name__ == '__main__':
-    res = []
-    for i in range(7):
-        res.append(playing())
-    print(res)
+    print(playing())
