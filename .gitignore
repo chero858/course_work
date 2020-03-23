@@ -6,3 +6,4 @@ venv
 example.exe
 example.exp
 example.lib
+*.pyd
