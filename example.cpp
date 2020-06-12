@@ -4,6 +4,7 @@
 #include <cfloat>
 #include <vector>
 #include <chrono>
+#include <cmath>
 #include <algorithm>
 
 namespace py = pybind11;
@@ -112,7 +113,7 @@ uint64_t insert_tile(uint64_t grid) {
 int score(uint64_t grid){
     int sum = 0;
     for(int i = 0;  i < 16; i++){
-        sum += ((grid & (0xFULL << (4 * i))) >> (4 * i));
+        sum += pow(2, ((grid & (0xFULL << (4 * i))) >> (4 * i)));
     }
     return sum;
 }
@@ -265,12 +266,13 @@ int find_best_move(uint64_t grid) {
     for(int i = 0; i < 4; i++)
         if(dirs[i] != 0)
             score_by_dir[i] /= dirs[i];
-//    cout << "****************\n";
+//    for(int i = 0; i < 4; i++)
+//        cout << score_by_dir[i] << endl;
+//    cout << "****************\n\n";
     int index = std::max_element(score_by_dir.begin(), score_by_dir.end()) - score_by_dir.begin();
     return index;
 }
-// best - 4824
-
+// best - 36236
 
 PYBIND11_MODULE(example, m) {
 m.doc() = "pybind11 example plugin"; // optional module docstring
